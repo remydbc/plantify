@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Comptes">
+<title>Carnet de comptes</title>
+<style>
+  :root{
+    --encre:#0b1220; --papier:#ffffff; --blanc:#fff;
+    --ligne:#a9b4c2; --ligne-pale:#d5dde6; --gris:#475569; --gris-pale:#5b6674;
+    --vert:#0f6b60; --rouge:#b3301c;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;background:var(--papier);color:var(--encre);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;line-height:1.4;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .page{max-width:640px;margin:0 auto;padding:28px 16px 60px}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:26px;font-weight:400;margin:0;letter-spacing:-.01em}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .eyebrow{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--gris)}
+  button{font:inherit;cursor:pointer;background:none;border:none;color:inherit;padding:0}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--encre);outline-offset:2px}
+  input{font:inherit;color:inherit}
+
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .outils{display:flex;gap:14px}
+  .outils button{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--gris)}
+  .outils button:hover{color:var(--encre)}
+
+  nav{display:flex;gap:24px;border-bottom:2px solid var(--encre);margin-top:16px}
+  nav button{padding:0 2px 9px;margin-bottom:-2px;border-bottom:2px solid transparent;
+    font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--gris)}
+  nav button[aria-selected="true"]{color:var(--encre);border-bottom-color:var(--encre)}
+  .pastille{color:var(--rouge);font-size:13px;margin-left:5px}
+
+  .mois{display:flex;align-items:center;justify-content:space-between;margin-top:22px}
+  .mois button{padding:8px;border-radius:6px;line-height:0}
+  .mois button:hover{background:var(--ligne-pale)}
+  svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+  #solde{text-align:center;font-size:42px;letter-spacing:-.02em;margin:14px 0 0}
+  #totaux{display:flex;justify-content:center;gap:28px;margin-top:14px;font-size:15px;color:var(--gris)}
+  #totaux b{font-weight:400;color:var(--encre)}
+  .alerte{display:flex;align-items:center;gap:7px;margin:18px auto 0;padding:6px 12px;
+    border:1px solid var(--rouge);color:var(--rouge);border-radius:3px;font-family:var(--mono);font-size:12px}
+  .alerte svg{width:14px;height:14px}
+
+  .ruban{display:flex;height:16px;border-radius:3px;overflow:hidden;background:var(--ligne-pale);margin-top:30px}
+  .repartition{list-style:none;padding:0;margin:16px 0 0}
+  .repartition li{margin-bottom:14px}
+  .rang{display:flex;align-items:center;gap:9px;font-size:15px}
+  .point{width:10px;height:10px;border-radius:50%;flex:none}
+  .nom{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .plafond{font-size:13px;color:var(--gris)}
+  .jauge{height:9px;border-radius:99px;background:var(--ligne-pale);overflow:hidden;margin:8px 0 0 19px}
+  .jauge div{height:100%;border-radius:99px}
+
+  .saisie{border-top:1px solid var(--ligne);margin-top:32px;padding-top:24px}
+  .bascule{display:flex;gap:8px}
+  .bascule button{flex:1;padding:10px 0;border:1px solid var(--ligne);background:var(--blanc);border-radius:3px;
+    font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--gris)}
+  .bascule button[aria-pressed="true"]{background:var(--encre);color:var(--papier);border-color:var(--encre)}
+  .duo{display:flex;gap:8px;margin-top:12px}
+  input[type=text],input[type=date]{padding:10px 12px;background:var(--blanc);border:1px solid var(--ligne);border-radius:3px;width:100%}
+  #montant{width:130px;flex:none;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:18px}
+  #date{font-family:var(--mono);font-size:14px}
+  #note{margin-top:12px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .chips button,.chips input{padding:7px 13px;border:1px solid var(--ligne);background:var(--blanc);
+    border-radius:99px;font-size:15px;color:var(--encre)}
+  .chips button[aria-pressed="true"]{background:var(--encre);color:var(--papier);border-color:var(--encre)}
+  .chips .ajout{border-style:dashed;padding:5px 9px;line-height:0}
+  .chips .ajout svg{width:14px;height:14px}
+  .chips input{width:120px;border-color:var(--encre);color:var(--encre)}
+  #valider{width:100%;margin-top:14px;padding:12px 0;background:var(--encre);color:var(--papier);border-radius:3px;
+    font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.14em}
+  #valider:hover{background:#334155}
+
+  .jour{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.14em;
+    color:var(--gris);border-bottom:1px solid var(--ligne);padding-bottom:6px;margin:26px 0 0}
+  .ecritures{list-style:none;padding:0;margin:0}
+  .ecritures li{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--ligne-pale)}
+  .barre{width:3px;height:26px;border-radius:2px;flex:none}
+  .libelle{flex:1;min-width:0}
+  .libelle span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .libelle .note{font-size:13px;color:var(--gris)}
+  .somme{font-size:15px}
+  .supprimer{padding:6px;color:var(--gris-pale);border-radius:4px;line-height:0}
+  .supprimer:hover{color:var(--rouge)}
+  .supprimer svg{width:16px;height:16px}
+
+  .limite-ligne{border-bottom:1px solid var(--ligne-pale);padding-bottom:16px;margin-bottom:16px}
+  .limite-ligne .rang input{width:96px;flex:none;text-align:right;font-family:var(--mono);
+    font-variant-numeric:tabular-nums;font-size:14px;padding:7px 9px}
+  .euro{color:var(--gris);font-family:var(--mono);font-size:15px}
+  .etat{margin-top:9px;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--gris)}
+  .vide{text-align:center;color:var(--gris);font-size:15px;padding:34px 0}
+  .pied{font-size:13px;color:var(--gris);margin-top:24px}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Carnet de comptes</h1>
+    <div class="outils">
+      <button id="btn-csv">CSV</button>
+      <button id="btn-sauver">Sauvegarde</button>
+      <button id="btn-restaurer">Restaurer</button>
+    </div>
+  </header>
+
+  <nav role="tablist">
+    <button id="tab-comptes" role="tab" aria-selected="true">Comptes</button>
+    <button id="tab-limites" role="tab" aria-selected="false">Limites<span class="pastille" id="pastille" hidden>●</span></button>
+  </nav>
+
+  <div class="mois">
+    <button id="mois-prec" aria-label="Mois précédent"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <p class="eyebrow" id="titre-mois"></p>
+    <button id="mois-suiv" aria-label="Mois suivant"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+  </div>
+
+  <!-- Onglet Comptes -->
+  <section id="vue-comptes">
+    <p id="solde" class="mono"></p>
+    <div id="totaux" class="mono"></div>
+    <div id="zone-alerte"></div>
+    <div id="zone-ruban"></div>
+
+    <section class="saisie">
+      <div class="bascule">
+        <button id="type-out" aria-pressed="true">Sortie</button>
+        <button id="type-in" aria-pressed="false">Entrée</button>
+      </div>
+      <div class="duo">
+        <input type="text" id="montant" inputmode="decimal" placeholder="0,00" aria-label="Montant en euros">
+        <input type="date" id="date" aria-label="Date">
+      </div>
+      <div class="chips" id="chips"></div>
+      <input type="text" id="note" placeholder="Note (facultatif)" aria-label="Note">
+      <button id="valider">Enregistrer</button>
+    </section>
+
+    <div id="zone-liste"></div>
+  </section>
+
+  <!-- Onglet Limites -->
+  <section id="vue-limites" hidden>
+    <p style="font-size:14px;color:var(--gris);margin-top:22px">
+      Un plafond par catégorie de dépense, pour le mois. Laisse vide pour ne pas suivre celle-ci.
+    </p>
+    <p class="eyebrow" id="resume-limites" style="margin-top:6px"></p>
+    <div id="zone-limites" style="margin-top:24px"></div>
+    <p class="pied">Les nouvelles catégories s'ajoutent depuis l'onglet Comptes, au moment de la saisie.</p>
+  </section>
+
+  <p class="pied" id="avertissement"></p>
+  <input type="file" id="fichier" accept="application/json" hidden>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var CLE = "carnet-de-comptes:v1";
+  var DEFAUT = {
+    transactions: [],
+    categories: { out: ["Loisir","Vivre","Urgent","Dettes"], in: ["Salaire"] },
+    limits: {}
+  };
+  var TEINTES = ["#0e7490","#c2410c","#1d4ed8","#a16207","#7e22ce","#15803d","#be123c","#0f766e"];
+  var VERT = "#0f6b60", ROUGE = "#b3301c";
+
+  var etat = charger();
+  var onglet = "comptes";
+  var type = "out";
+  var categorie = etat.categories.out[0] || "";
+  var nouvelleCat = false;
+  var maintenant = new Date();
+  var curseur = { annee: maintenant.getFullYear(), mois: maintenant.getMonth() };
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function charger(){
+    try {
+      var brut = localStorage.getItem(CLE);
+      if (!brut) return JSON.parse(JSON.stringify(DEFAUT));
+      var p = JSON.parse(brut);
+      return {
+        transactions: p.transactions || [],
+        categories: {
+          out: (p.categories && p.categories.out) || DEFAUT.categories.out.slice(),
+          in: (p.categories && p.categories.in) || DEFAUT.categories.in.slice()
+        },
+        limits: p.limits || {}
+      };
+    } catch(e){ return JSON.parse(JSON.stringify(DEFAUT)); }
+  }
+  function sauver(){
+    try { localStorage.setItem(CLE, JSON.stringify(etat)); $("avertissement").textContent = ""; }
+    catch(e){ $("avertissement").textContent = "L'enregistrement a échoué : le stockage du navigateur est plein ou bloqué."; }
+  }
+
+  function teinte(nom){
+    var h = 0;
+    for (var i=0;i<nom.length;i++) h = (h*31 + nom.charCodeAt(i)) % 9973;
+    return TEINTES[h % TEINTES.length];
+  }
+  var fmtEuro = new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR"});
+  function euros(n){ return fmtEuro.format(n); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function isoJour(d){
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  }
+  var fmtMois = new Intl.DateTimeFormat("fr-FR",{month:"long",year:"numeric"});
+  var fmtJour = new Intl.DateTimeFormat("fr-FR",{weekday:"short",day:"numeric",month:"short"});
+
+  function duMois(){
+    return etat.transactions.filter(function(t){
+      var d = new Date(t.date+"T12:00:00");
+      return d.getFullYear()===curseur.annee && d.getMonth()===curseur.mois;
+    }).sort(function(a,b){ return a.date<b.date?1:a.date>b.date?-1:b.id-a.id; });
+  }
+  function depensesParCat(lignes){
+    var m = {};
+    lignes.forEach(function(t){ if(t.type==="out") m[t.category]=(m[t.category]||0)+t.amount; });
+    return m;
+  }
+
+  /* ---------- rendu ---------- */
+  function rendre(){
+    var lignes = duMois();
+    var entrees = 0, sorties = 0;
+    lignes.forEach(function(t){ if(t.type==="in") entrees+=t.amount; else sorties+=t.amount; });
+    var solde = entrees - sorties;
+    var parCat = depensesParCat(lignes);
+    var depassees = Object.keys(parCat).filter(function(n){ return etat.limits[n] && parCat[n] > etat.limits[n]; });
+
+    $("titre-mois").textContent = fmtMois.format(new Date(curseur.annee, curseur.mois, 1));
+    $("pastille").hidden = depassees.length === 0;
+    $("tab-comptes").setAttribute("aria-selected", onglet==="comptes");
+    $("tab-limites").setAttribute("aria-selected", onglet==="limites");
+    $("vue-comptes").hidden = onglet !== "comptes";
+    $("vue-limites").hidden = onglet !== "limites";
+
+    if (onglet === "comptes") rendreComptes(lignes, entrees, sorties, solde, parCat, depassees);
+    else rendreLimites(parCat);
+  }
+
+  function rendreComptes(lignes, entrees, sorties, solde, parCat, depassees){
+    var s = $("solde");
+    s.textContent = (solde>0?"+":"") + euros(solde);
+    s.style.color = solde<0 ? ROUGE : VERT;
+    $("totaux").innerHTML = "Entrées <b>"+euros(entrees)+"</b>&nbsp;&nbsp;&nbsp;Sorties <b>"+euros(sorties)+"</b>";
+
+    $("zone-alerte").innerHTML = depassees.length
+      ? '<button class="alerte" id="aller-limites"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>'
+        + depassees.length + " limite" + (depassees.length>1?"s":"") + " dépassée" + (depassees.length>1?"s":"") + "</button>"
+      : "";
+    if (depassees.length) $("aller-limites").onclick = function(){ onglet="limites"; rendre(); window.scrollTo(0,0); };
+
+    var cats = Object.keys(parCat).sort(function(a,b){ return parCat[b]-parCat[a]; });
+    if (cats.length){
+      var ruban = '<div class="ruban">' + cats.map(function(n){
+        return '<div style="width:'+(parCat[n]/sorties*100)+'%;background:'+teinte(n)+'" title="'+esc(n)+'"></div>';
+      }).join("") + '</div><ul class="repartition">' + cats.map(function(n){
+        var lim = etat.limits[n], depasse = lim && parCat[n] > lim;
+        return '<li><div class="rang">'
+          + '<span class="point" style="background:'+teinte(n)+'"></span>'
+          + '<span class="nom">'+esc(n)+'</span>'
+          + '<span class="mono"'+(depasse?' style="color:'+ROUGE+'"':'')+'>'+euros(parCat[n])+'</span>'
+          + (lim ? '<span class="mono plafond">/ '+euros(lim)+'</span>' : '')
+          + '</div>'
+          + (lim ? '<div class="jauge"><div style="width:'+Math.min(100,parCat[n]/lim*100)+'%;background:'+(depasse?ROUGE:teinte(n))+'"></div></div>' : '')
+          + '</li>';
+      }).join("") + '</ul>';
+      $("zone-ruban").innerHTML = ruban;
+    } else $("zone-ruban").innerHTML = "";
+
+    rendreChips();
+
+    if (!lignes.length){
+      $("zone-liste").innerHTML = '<p class="vide">Aucune écriture ce mois-ci. Ajoute ta première ligne au-dessus.</p>';
+      return;
+    }
+    var jours = [], vus = {};
+    lignes.forEach(function(t){ if(!vus[t.date]){ vus[t.date]=[]; jours.push(t.date);} vus[t.date].push(t); });
+    $("zone-liste").innerHTML = jours.map(function(j){
+      return '<p class="jour">'+fmtJour.format(new Date(j+"T12:00:00"))+'</p><ul class="ecritures">'
+        + vus[j].map(function(t){
+            return '<li><span class="barre" style="background:'+(t.type==="in"?VERT:teinte(t.category))+'"></span>'
+              + '<span class="libelle"><span>'+esc(t.category)+'</span>'
+              + (t.note ? '<span class="note">'+esc(t.note)+'</span>' : '') + '</span>'
+              + '<span class="somme mono"'+(t.type==="in"?' style="color:'+VERT+'"':'')+'>'
+              + (t.type==="in"?"+":"−") + euros(t.amount) + '</span>'
+              + '<button class="supprimer" data-id="'+t.id+'" aria-label="Supprimer '+esc(t.category)+'">'
+              + '<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button></li>';
+          }).join("") + '</ul>';
+    }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll(".supprimer"), function(b){
+      b.onclick = function(){
+        var id = Number(b.getAttribute("data-id"));
+        etat.transactions = etat.transactions.filter(function(t){ return t.id !== id; });
+        sauver(); rendre();
+      };
+    });
+  }
+
+  function rendreChips(){
+    var cats = etat.categories[type];
+    var html = cats.map(function(c){
+      return '<button data-cat="'+esc(c)+'" aria-pressed="'+(c===categorie)+'">'+esc(c)+'</button>';
+    }).join("");
+    html += nouvelleCat
+      ? '<input id="cat-neuve" placeholder="Nom" aria-label="Nom de la nouvelle catégorie">'
+      : '<button class="ajout" id="cat-ajout" aria-label="Ajouter une catégorie"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>';
+    $("chips").innerHTML = html;
+
+    Array.prototype.forEach.call($("chips").querySelectorAll("[data-cat]"), function(b){
+      b.onclick = function(){ categorie = b.getAttribute("data-cat"); rendreChips(); };
+    });
+    if (nouvelleCat){
+      var champ = $("cat-neuve");
+      champ.focus();
+      var valider = function(){
+        var nom = champ.value.trim();
+        nouvelleCat = false;
+        if (nom){
+          if (etat.categories[type].indexOf(nom) === -1){ etat.categories[type].push(nom); sauver(); }
+          categorie = nom;
+        }
+        rendre();
+      };
+      champ.onblur = valider;
+      champ.onkeydown = function(e){
+        if (e.key === "Enter") valider();
+        if (e.key === "Escape"){ nouvelleCat = false; rendreChips(); }
+      };
+    } else {
+      $("cat-ajout").onclick = function(){ nouvelleCat = true; rendreChips(); };
+    }
+  }
+
+  function rendreLimites(parCat){
+    var suivies = Object.keys(etat.limits).length;
+    var total = Object.keys(etat.limits).reduce(function(s,k){ return s + etat.limits[k]; }, 0);
+    $("resume-limites").textContent = fmtMois.format(new Date(curseur.annee,curseur.mois,1))
+      + " · " + suivies + " suivie" + (suivies>1?"s":"")
+      + (total>0 ? " · plafond total " + euros(total) : "");
+
+    $("zone-limites").innerHTML = etat.categories.out.map(function(nom){
+      var dep = parCat[nom] || 0, lim = etat.limits[nom], depasse = lim && dep > lim;
+      var inutilisee = !etat.transactions.some(function(t){ return t.category === nom; });
+      return '<div class="limite-ligne"><div class="rang">'
+        + '<span class="point" style="background:'+teinte(nom)+'"></span>'
+        + '<span class="nom">'+esc(nom)+'</span>'
+        + '<input type="text" inputmode="decimal" data-lim="'+esc(nom)+'" value="'+(lim!==undefined?String(lim).replace(".",","):"")+'" placeholder="—" aria-label="Limite mensuelle pour '+esc(nom)+'">'
+        + '<span class="euro">€</span>'
+        + (inutilisee ? '<button class="supprimer" data-delcat="'+esc(nom)+'" aria-label="Supprimer la catégorie '+esc(nom)+'"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>' : '')
+        + '</div>'
+        + (lim
+            ? '<div class="jauge" style="margin-left:17px"><div style="width:'+Math.min(100,dep/lim*100)+'%;background:'+(depasse?ROUGE:teinte(nom))+'"></div></div>'
+              + '<p class="etat"'+(depasse?' style="color:'+ROUGE+'"':'')+'>'
+              + (depasse ? euros(dep)+" dépensés · dépassement de "+euros(dep-lim)
+                         : euros(dep)+" dépensés · il reste "+euros(lim-dep)) + '</p>'
+            : '<p class="etat">'+euros(dep)+' ce mois-ci · pas de plafond</p>')
+        + '</div>';
+    }).join("");
+
+    Array.prototype.forEach.call($("zone-limites").querySelectorAll("[data-lim]"), function(inp){
+      inp.oninput = function(){
+        var nom = inp.getAttribute("data-lim");
+        var val = parseFloat(inp.value.replace(",","."));
+        if (!inp.value.trim() || isNaN(val) || val <= 0) delete etat.limits[nom];
+        else etat.limits[nom] = Math.round(val*100)/100;
+        sauver();
+      };
+      inp.onblur = function(){ rendre(); };
+    });
+    Array.prototype.forEach.call($("zone-limites").querySelectorAll("[data-delcat]"), function(b){
+      b.onclick = function(){
+        var nom = b.getAttribute("data-delcat");
+        etat.categories.out = etat.categories.out.filter(function(c){ return c !== nom; });
+        delete etat.limits[nom];
+        if (categorie === nom) categorie = etat.categories[type][0] || "";
+        sauver(); rendre();
+      };
+    });
+  }
+
+  /* ---------- actions ---------- */
+  function ajouter(){
+    var val = parseFloat($("montant").value.replace(",","."));
+    if (!val || val <= 0 || !categorie) return;
+    etat.transactions.push({
+      id: Date.now(), date: $("date").value || isoJour(new Date()),
+      type: type, amount: Math.round(val*100)/100,
+      category: categorie, note: $("note").value.trim()
+    });
+    $("montant").value = ""; $("note").value = "";
+    sauver(); rendre();
+  }
+
+  function telecharger(nom, contenu, mime){
+    var url = URL.createObjectURL(new Blob([contenu], {type: mime}));
+    var a = document.createElement("a");
+    a.href = url; a.download = nom; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  $("btn-csv").onclick = function(){
+    var l = ["date;type;categorie;montant;note"].concat(
+      etat.transactions.slice().sort(function(a,b){ return a.date>b.date?1:-1; }).map(function(t){
+        return [t.date, t.type==="in"?"entree":"sortie", t.category, String(t.amount).replace(".",","), t.note].join(";");
+      }));
+    telecharger("depenses.csv", "\ufeff"+l.join("\n"), "text/csv;charset=utf-8");
+  };
+  $("btn-sauver").onclick = function(){
+    telecharger("carnet-"+isoJour(new Date())+".json", JSON.stringify(etat), "application/json");
+  };
+  $("btn-restaurer").onclick = function(){ $("fichier").click(); };
+  $("fichier").onchange = function(e){
+    var f = e.target.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function(){
+      try {
+        var p = JSON.parse(r.result);
+        if (!p.transactions) throw 0;
+        etat = { transactions: p.transactions, categories: p.categories || DEFAUT.categories, limits: p.limits || {} };
+        categorie = etat.categories[type][0] || "";
+        sauver(); rendre();
+        $("avertissement").textContent = "Sauvegarde restaurée.";
+      } catch(err){ $("avertissement").textContent = "Fichier illisible : choisis une sauvegarde JSON de ce carnet."; }
+    };
+    r.readAsText(f);
+    e.target.value = "";
+  };
+
+  $("tab-comptes").onclick = function(){ onglet="comptes"; rendre(); };
+  $("tab-limites").onclick = function(){ onglet="limites"; rendre(); };
+  $("mois-prec").onclick = function(){ decaler(-1); };
+  $("mois-suiv").onclick = function(){ decaler(1); };
+  function decaler(pas){
+    var d = new Date(curseur.annee, curseur.mois + pas, 1);
+    curseur = { annee: d.getFullYear(), mois: d.getMonth() };
+    rendre();
+  }
+  $("type-out").onclick = function(){ basculer("out"); };
+  $("type-in").onclick = function(){ basculer("in"); };
+  function basculer(t){
+    type = t;
+    $("type-out").setAttribute("aria-pressed", t==="out");
+    $("type-in").setAttribute("aria-pressed", t==="in");
+    if (etat.categories[t].indexOf(categorie) === -1) categorie = etat.categories[t][0] || "";
+    rendreChips();
+  }
+  $("valider").onclick = ajouter;
+  ["montant","note"].forEach(function(id){
+    $(id).onkeydown = function(e){ if (e.key === "Enter") ajouter(); };
+  });
+
+  $("date").value = isoJour(new Date());
+  if (!("localStorage" in window)) {
+    $("avertissement").textContent = "Ce navigateur bloque le stockage local : rien ne sera conservé.";
+  }
+  rendre();
+})();
+</script>
+</body>
+</html>
